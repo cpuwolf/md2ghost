@@ -80,6 +80,7 @@ class Md2Ghost:
         tags_header_pattern = re.compile(r'^tags:')
         tags_pattern = re.compile(r'^\s*-\s*(.*)')
         header_pattern = re.compile(r'^---')
+        weblink_pattern = re.compile(r'((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*')
 
         with open(filepath, 'r', encoding="utf8") as fin:
             header_pattern_count = 0
@@ -144,8 +145,13 @@ class Md2Ghost:
                     else:
                         #html convert
                         if len(line) > 1:
-                            print("<p>"+line +"</p>")
-                            self.html = self.html + "<p>"+line +"</p>"
+                            is_weblink = weblink_pattern.match(line)
+                            if is_weblink != None:
+                                print("weblink "+line)
+                                self.html = self.html + "<p><a href=\""+line+"\">"+line+"</a></p>"
+                            else:
+                                print("<p>"+line +"</p>")
+                                self.html = self.html + "<p>"+line +"</p>"
                         else:
                             print("<hr>")
                             #self.html = self.html + "<hr>"
