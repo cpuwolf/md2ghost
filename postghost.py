@@ -137,6 +137,7 @@ class Md2Ghost:
                             url_path = url_path.replace("\\", "/")
                             img_str= "<figure class=\"kg-card kg-image-card\"><img src=\"__GHOST_URL__/content/images/" + url_path + "\" class=\"kg-image\" alt loading=\"lazy\"></figure>"
                             print(img_str)
+                            self.all_images_url.append("__GHOST_URL__/content/images/" + url_path)
                             self.html = self.html + img_str
                         else:
                             print("Cannot find image file: " + image_file_path)
@@ -168,7 +169,7 @@ class Md2Ghost:
             print(url_image)
             url_ref_path = os.path.relpath(url_image, base_url+"content/images")
             print(url_ref_path)
-            self.all_images_url.append(url_ref_path)
+            
             return url_ref_path
 
     def post_blog(self):
@@ -195,10 +196,13 @@ class Md2Ghost:
             date_pub = newobj.strftime('%Y-%m-%dT%H:%M:%SZ')
             print(date_pub)
             body['posts'][0]['published_at'] = date_pub
-
+        #tags
         if len(self.ctags_line) > 0:
             body['posts'][0]['tags'] = self.ctags_line
 
+        #feature_image
+        if len(self.all_images_url) > 0:
+            body['posts'][0]['feature_image'] = self.all_images_url[0]
         print(body)
 
         r = requests.post(url, json=body, headers=headers)
