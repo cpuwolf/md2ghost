@@ -68,10 +68,14 @@ image_asset_path = os.path.splitext(filepath)[0]
 image_pattern = re.compile(r'\{\%\s*asset_img\s*([0-9a-zA-Z_.]+)')
 title_pattern = re.compile(r'^title:\s*(.*)')
 date_pattern = re.compile(r'^date:\s*(.*)')
+tags_header_pattern = re.compile(r'^tags:')
+tags_pattern = re.compile(r'^\s*-\s*(.*)')
 header_pattern = re.compile(r'^---')
 title_line = "My test post"
+ctags_line = []
 with open(filepath, 'r', encoding="utf8") as fin:
     header_pattern_count = 0
+    tags_count = 0
     for line in fin:
         #print(line)
         #extract asset_img
@@ -88,7 +92,7 @@ with open(filepath, 'r', encoding="utf8") as fin:
             header_pattern_count = header_pattern_count + 1
             print("header")
         #inside headers content
-        if header_pattern_count <= 2:
+        if header_pattern_count < 2:
             # find tile
             title_lin = title_pattern.findall(line)
             if len(title_lin) > 0:
@@ -99,6 +103,17 @@ with open(filepath, 'r', encoding="utf8") as fin:
             if len(date_lin) > 0:
                 date_line = date_lin[0]
                 print(date_lin[0])
+            # find tags
+            tags_header_line = tags_header_pattern.match(line)
+            if tags_header_line != None: 
+                tags_count = tags_count + 1
+                print("tags")
+            if tags_count > 0:
+                tag_lin = tags_pattern.findall(line)
+                if len(tag_lin) > 0:
+                    print("\t"+tag_lin[0])
+                    ctags_line.append(tag_lin[0])
+
 
 
 body = {
@@ -119,6 +134,9 @@ if 'date_line' in globals():
     date_pub = newobj.strftime('%Y-%m-%dT%H:%M:%SZ')
     print(date_pub)
     body['posts'][0]['published_at'] = date_pub
+
+if len(ctags_line) > 0:
+    body['posts'][0]['tags'] = ctags_line
 
 print(body)
 
