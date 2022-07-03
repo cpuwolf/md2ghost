@@ -135,7 +135,7 @@ class Md2Ghost:
                             self.all_images.append(img_obj)
                             url_path = self.upload_image(img_obj)
                             url_path = url_path.replace("\\", "/")
-                            img_str= "<figure class=\"kg-card kg-image-card\"><img src=\"__GHOST_URL__/content/images/" + url_path + "\" class=\"kg-image\" alt loading=\"lazy\" width=\"593\" height=\"593\"></figure>"
+                            img_str= "<figure class=\"kg-card kg-image-card\"><img src=\"__GHOST_URL__/content/images/" + url_path + "\" class=\"kg-image\" alt loading=\"lazy\"></figure>"
                             print(img_str)
                             self.html = self.html + img_str
                         else:
