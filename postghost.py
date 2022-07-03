@@ -146,8 +146,9 @@ for idx, simg_file_obj in enumerate(all_images):
     print(simg_file_obj[0])
     with open(simg_file_obj[0], "rb") as image:
         img_content = BytesIO(image.read())
+        content_type, _ = mimetypes.guess_type(simg_file_obj[0])
         
-        _files = {"file": (simg_file_obj[0], img_content, "image/jpeg")}
+        _files = {"file": (simg_file_obj[0], img_content, content_type)}
         values = {"purpose": "image","rel": simg_file_obj[1]}
         print(url)
         r = requests.post(url, files=_files, headers=headers, params=values)
