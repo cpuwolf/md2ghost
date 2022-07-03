@@ -64,6 +64,7 @@ class Md2Ghost:
         self.ctags_line = []
         self.all_images = []
         self.all_images_url = []
+        self.html = ""
     def handle_md_file(self, filepath):
 
         self.ctags_line.clear()
@@ -132,48 +133,53 @@ class Md2Ghost:
                             print(ref_path)
                             img_obj = [ image_file_path, ref_path]
                             self.all_images.append(img_obj)
-                            img_str= "<figure class=\"kg-card kg-image-card\"><img src=\"__GHOST_URL__/content/images/" + ref_path + " class=\"kg-image\"></figure>"
+                            url_path = self.upload_image(img_obj)
+                            url_path = url_path.replace("\\", "/")
+                            img_str= "<figure class=\"kg-card kg-image-card\"><img src=\"__GHOST_URL__/content/images/" + url_path + "\" class=\"kg-image\" alt loading=\"lazy\" width=\"593\" height=\"593\"></figure>"
                             print(img_str)
+                            self.html = self.html + img_str
                         else:
                             print("Cannot find image file: " + image_file_path)
                     else:
                         #html convert
                         if len(line) > 1:
                             print("<p>"+line +"</p>")
+                            self.html = self.html + "<p>"+line +"</p>"
                         else:
                             print("<hr>")
+                            #self.html = self.html + "<hr>"
 
-    def upload_images(self):
+    def upload_image(self, simg_file_obj):
         #upload images
         url = base_url + 'ghost/api/admin/images/upload/'
-        for idx, simg_file_obj in enumerate(self.all_images):
-            print(simg_file_obj[0])
-            with open(simg_file_obj[0], "rb") as image:
-                img_content = BytesIO(image.read())
-                content_type, _ = mimetypes.guess_type(simg_file_obj[0])
-                
-                _files = {"file": (simg_file_obj[0], img_content, content_type)}
-                values = {"purpose": "image","rel": simg_file_obj[1]}
-                print(url)
-                r = requests.post(url, files=_files, headers=headers, params=values)
-                #print(r.content)
-                rj = r.json()
-                url_image = rj["images"][0]["url"]
-                print(url_image)
-                url_ref_path = os.path.relpath(url_image, base_url)
-                print(url_ref_path)
-                self.all_images_url.append(url_ref_path)
-                sleep(1)
+        #for idx, simg_file_obj in enumerate(self.all_images):
+        print(simg_file_obj[0])
+        with open(simg_file_obj[0], "rb") as image:
+            img_content = BytesIO(image.read())
+            content_type, _ = mimetypes.guess_type(simg_file_obj[0])
+            
+            _files = {"file": (simg_file_obj[0], img_content, content_type)}
+            values = {"purpose": "image","rel": simg_file_obj[1]}
+            print(url)
+            r = requests.post(url, files=_files, headers=headers, params=values)
+            #print(r.content)
+            rj = r.json()
+            url_image = rj["images"][0]["url"]
+            print(url_image)
+            url_ref_path = os.path.relpath(url_image, base_url+"content/images")
+            print(url_ref_path)
+            self.all_images_url.append(url_ref_path)
+            return url_ref_path
 
     def post_blog(self):
         # .md file as an input argument
         #post blog
-        url = base_url + 'ghost/api/admin/posts/'
+        url = base_url + 'ghost/api/admin/posts/?source=html'
         body = {
             "posts": [
                 {
                     "title": self.title_line,
-                    "mobiledoc": "{\"version\":\"0.3.1\",\"atoms\":[],\"cards\":[],\"markups\":[],\"sections\":[[1,\"p\",[[0,[],0,\"My post content. Work in progress...\"]]]]}",
+                    "html": self.html
                 }
             ]
         }
@@ -181,7 +187,7 @@ class Md2Ghost:
         #<figure class="kg-card kg-image-card"><img src="__GHOST_URL__/content/images/2022/07/Quic.png" class="kg-image" alt loading="lazy" width="593" height="593"></figure>
 
         if hasattr(self, 'date_line'):
-            date_tz_8 = date.strptime(date_line,'%Y-%m-%d %H:%M:%S')
+            date_tz_8 = date.strptime(self.date_line,'%Y-%m-%d %H:%M:%S')
             tz = pytz.timezone('Asia/Shanghai')
             obj = tz.localize(date_tz_8)
             print(obj)
@@ -206,4 +212,4 @@ else:
     exit(-1)
 md2ghost=Md2Ghost()
 md2ghost.handle_md_file(filepath)
-md2ghost.upload_images()
+md2ghost.post_blog()
