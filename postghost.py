@@ -58,32 +58,50 @@ if len(sys.argv) > 1:
 else:
     exit(-1)
 
+
 print(filepath)
 print(os.path.basename(filepath))
 print(os.path.splitext(filepath)[0])
 
 image_asset_path = os.path.splitext(filepath)[0]
-image_pattern = re.compile(r'\{\%\s*asset_img\s*([0-9a-zA-Z_.]+)\s')
-
+image_pattern = re.compile(r'\{\%\s*asset_img\s*([0-9a-zA-Z_.]+)')
+title_pattern = re.compile(r'^title:\s*(.*)')
+date_pattern = re.compile(r'^date:\s*(.*)')
+header_pattern = re.compile(r'^---')
+title_line = "My test post"
 with open(filepath, 'r', encoding="utf8") as fin:
+    header_pattern_count = 0
     for line in fin:
         #print(line)
+        #extract asset_img
         image_file = image_pattern.findall(line)
         if len(image_file) > 0:
             image_file_path = os.path.join(image_asset_path,image_file[0])
             if os.path.exists(image_file_path):
                 print(image_file_path)
             else:
-                printf("Cannot find image file: " + image_file_path)
+                print("Cannot find image file: " + image_file_path)
+        #extract header in .md
+        header_line = header_pattern.findall(line)
+        if len(header_line) > 0:
+            header_pattern_count = header_pattern_count + 1
+            print("header")
+        #inside headers content
+        if header_pattern_count <= 2:
+            # find tile
+            title_lin = title_pattern.findall(line)
+            if len(title_lin) > 0:
+                title_line = title_lin[0]
+                print(title_lin[0])
+
 
 body = {
     "posts": [
         {
-            "title": "My test post",
+            "title": title_line,
             "mobiledoc": "{\"version\":\"0.3.1\",\"atoms\":[],\"cards\":[],\"markups\":[],\"sections\":[[1,\"p\",[[0,[],0,\"My post content. Work in progress...\"]]]]}",
         }
     ]
 }
-#r = requests.post(url, json=body, headers=headers)
-
-#print(r.content)
+r = requests.post(url, json=body, headers=headers)
+print(r.content)
