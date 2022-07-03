@@ -78,19 +78,14 @@ with open(filepath, 'r', encoding="utf8") as fin:
     tags_count = 0
     for line in fin:
         #print(line)
-        #extract asset_img
-        image_file = image_pattern.findall(line)
-        if len(image_file) > 0:
-            image_file_path = os.path.join(image_asset_path,image_file[0])
-            if os.path.exists(image_file_path):
-                print(image_file_path)
-            else:
-                print("Cannot find image file: " + image_file_path)
+
         #extract header in .md
         header_line = header_pattern.findall(line)
         if len(header_line) > 0:
             header_pattern_count = header_pattern_count + 1
             print("header")
+            if header_pattern_count == 2:
+                continue
         #inside headers content
         if header_pattern_count < 2:
             # find tile
@@ -113,6 +108,27 @@ with open(filepath, 'r', encoding="utf8") as fin:
                 if len(tag_lin) > 0:
                     print("\t"+tag_lin[0])
                     ctags_line.append(tag_lin[0])
+        #
+        if header_pattern_count >= 2:
+            #markdown content
+            #extract asset_img
+            image_file = image_pattern.findall(line)
+            if len(image_file) > 0:
+                image_file_path = os.path.join(image_asset_path,image_file[0])
+                if os.path.exists(image_file_path):
+                    img_str= "<figure class=\"kg-card kg-image-card\"><img src=\"__GHOST_URL__/content/images/" + image_file_path + " class=\"kg-image\"></figure>"
+                    #print(image_file_path)
+                    print(img_str)
+                    
+                else:
+                    print("Cannot find image file: " + image_file_path)
+            else:
+                #html convert
+                if len(line) > 1:
+
+                    print("<p>"+line +"</p>")
+                else:
+                    print("<hr>")
 
 
 
@@ -124,6 +140,8 @@ body = {
         }
     ]
 }
+
+#<figure class="kg-card kg-image-card"><img src="__GHOST_URL__/content/images/2022/07/Quic.png" class="kg-image" alt loading="lazy" width="593" height="593"></figure>
 
 if 'date_line' in globals():
     date_tz_8 = date.strptime(date_line,'%Y-%m-%d %H:%M:%S')
@@ -140,5 +158,5 @@ if len(ctags_line) > 0:
 
 print(body)
 
-r = requests.post(url, json=body, headers=headers)
+#r = requests.post(url, json=body, headers=headers)
 print(r.content)
