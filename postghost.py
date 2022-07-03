@@ -7,6 +7,8 @@ from datetime import datetime as date
 import json
 
 import os
+import sys
+
 
 
 with open(".config.json", "r") as f:
@@ -48,12 +50,23 @@ if os.name == 'nt':
     headers = {'Authorization': 'Ghost {}'.format(token)}
 else:
     headers = {'Authorization': 'Ghost {}'.format(token.decode("utf-8"))}
+
+
+#
+if len(sys.argv) > 1:
+    filepath = sys.argv[1]
+else:
+    exit(-1)
+
+print(filepath)
+with open(filepath, 'rU' , encoding="utf8") as fin:
+    for line in fin:
+        print(line)
 body = {
     "posts": [
         {
             "title": "My test post",
             "mobiledoc": "{\"version\":\"0.3.1\",\"atoms\":[],\"cards\":[],\"markups\":[],\"sections\":[[1,\"p\",[[0,[],0,\"My post content. Work in progress...\"]]]]}",
-            "status": "published"
         }
     ]
 }
