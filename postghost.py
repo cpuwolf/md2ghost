@@ -81,9 +81,11 @@ class Md2Ghost:
         tags_pattern = re.compile(r'^\s*-\s*(.*)')
         header_pattern = re.compile(r'^---')
         weblink_pattern = re.compile(r'((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*')
+        adv_weblink_pattern = re.compile(r'\[(.*?)\]\((.*?)\)')
         h1_pattern = re.compile(r'^#\s*(.*?)#')
         h2_pattern = re.compile(r'^##\s*(.*?)#')
         h3_pattern = re.compile(r'^###\s*(.*?)#')
+
 
         with open(filepath, 'r', encoding="utf8") as fin:
             header_pattern_count = 0
@@ -149,12 +151,16 @@ class Md2Ghost:
                         #html convert
                         if len(line) > 1:
                             is_weblink = weblink_pattern.match(line)
+                            is_adv_weblink = adv_weblink_pattern.findall(line)
                             is_h1 = h1_pattern.findall(line)
                             is_h2 = h2_pattern.findall(line)
                             is_h3 = h3_pattern.findall(line)
                             if is_weblink != None:
                                 print("weblink "+line)
                                 self.html = self.html + "<p><a href=\""+line+"\">"+line+"</a></p>"
+                            elif len(is_adv_weblink) > 0:
+                                print("adv weblink "+line)
+                                self.html = self.html + "<p><a href=\""+is_adv_weblink[0][1]+"\">"+is_adv_weblink[0][0]+"</a></p>"
                             elif len(is_h3) > 0:
                                 print("h3 "+line)
                                 self.html = self.html + "<h3>"+is_h3[0] +"</h3>"
@@ -165,6 +171,7 @@ class Md2Ghost:
                                 print("h1 "+line)
                                 self.html = self.html + "<h1>"+is_h1[0] +"</h1>"
                             else:
+                                print(is_adv_weblink)
                                 print("<p>"+line +"</p>")
                                 self.html = self.html + "<p>"+line +"</p>"
                         else:
