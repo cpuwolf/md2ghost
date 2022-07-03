@@ -1,15 +1,17 @@
 
 # written by Wei Shuai <cpuwolf@gmail.com> July 1st, 2022
 
+from asyncio import sleep
 import requests # pip install requests
 import jwt	# pip install pyjwt
 from datetime import datetime as date, tzinfo
 import json
-
+import mimetypes
 import os
 import sys
 import re
 import pytz
+from io import BytesIO
 
 
 with open(".config.json", "r") as f:
@@ -46,7 +48,7 @@ else:
     print('Ghost {}'.format(token.decode("utf-8")))
 
 # Make an authenticated request to create a post
-url = base_url + 'ghost/api/admin/posts/'
+
 if os.name == 'nt':
     headers = {'Authorization': 'Ghost {}'.format(token)}
 else:
@@ -73,6 +75,7 @@ tags_pattern = re.compile(r'^\s*-\s*(.*)')
 header_pattern = re.compile(r'^---')
 title_line = "My test post"
 ctags_line = []
+all_images = []
 with open(filepath, 'r', encoding="utf8") as fin:
     header_pattern_count = 0
     tags_count = 0
@@ -116,22 +119,43 @@ with open(filepath, 'r', encoding="utf8") as fin:
             if len(image_file) > 0:
                 image_file_path = os.path.join(image_asset_path,image_file[0])
                 if os.path.exists(image_file_path):
-                    img_str= "<figure class=\"kg-card kg-image-card\"><img src=\"__GHOST_URL__/content/images/" + image_file_path + " class=\"kg-image\"></figure>"
                     #print(image_file_path)
-                    print(img_str)
                     
+                    dirname=os.path.dirname
+                    useless_base_path = dirname(dirname(image_file_path))
+                    print(useless_base_path)
+                    ref_path = os.path.relpath(image_file_path, useless_base_path)
+                    print(ref_path)
+                    img_obj = [ image_file_path, ref_path]
+                    all_images.append(img_obj)
+                    img_str= "<figure class=\"kg-card kg-image-card\"><img src=\"__GHOST_URL__/content/images/" + ref_path + " class=\"kg-image\"></figure>"
+                    print(img_str)
                 else:
                     print("Cannot find image file: " + image_file_path)
             else:
                 #html convert
                 if len(line) > 1:
-
                     print("<p>"+line +"</p>")
                 else:
                     print("<hr>")
 
 
+#upload images
+url = base_url + 'ghost/api/admin/images/upload/'
+for idx, simg_file_obj in enumerate(all_images):
+    print(simg_file_obj[0])
+    with open(simg_file_obj[0], "rb") as image:
+        img_content = BytesIO(image.read())
+        
+        _files = {"file": (simg_file_obj[0], img_content, "image/jpeg")}
+        values = {"purpose": "image","rel": simg_file_obj[1]}
+        print(url)
+        r = requests.post(url, files=_files, headers=headers, params=values)
+        print(r.content)
+        #sleep(2)
 
+#post blog
+url = base_url + 'ghost/api/admin/posts/'
 body = {
     "posts": [
         {
