@@ -208,7 +208,8 @@ class Md2Ghost:
             "posts": [
                 {
                     "title": self.title_line,
-                    "html": self.html
+                    "html": self.html,
+                    "status": "published"
                 }
             ]
         }
