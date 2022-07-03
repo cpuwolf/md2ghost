@@ -3,12 +3,13 @@
 
 import requests # pip install requests
 import jwt	# pip install pyjwt
-from datetime import datetime as date
+from datetime import datetime as date, tzinfo
 import json
 
 import os
 import sys
 import re
+import pytz
 
 
 with open(".config.json", "r") as f:
@@ -93,6 +94,11 @@ with open(filepath, 'r', encoding="utf8") as fin:
             if len(title_lin) > 0:
                 title_line = title_lin[0]
                 print(title_lin[0])
+            # find date
+            date_lin = date_pattern.findall(line)
+            if len(date_lin) > 0:
+                date_line = date_lin[0]
+                print(date_lin[0])
 
 
 body = {
@@ -103,5 +109,18 @@ body = {
         }
     ]
 }
+
+if 'date_line' in globals():
+    date_tz_8 = date.strptime(date_line,'%Y-%m-%d %H:%M:%S')
+    tz = pytz.timezone('Asia/Shanghai')
+    obj = tz.localize(date_tz_8)
+    print(obj)
+    newobj = obj.astimezone(pytz.UTC)
+    date_pub = newobj.strftime('%Y-%m-%dT%H:%M:%SZ')
+    print(date_pub)
+    body['posts'][0]['published_at'] = date_pub
+
+print(body)
+
 r = requests.post(url, json=body, headers=headers)
 print(r.content)
