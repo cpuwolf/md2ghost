@@ -76,6 +76,7 @@ header_pattern = re.compile(r'^---')
 title_line = "My test post"
 ctags_line = []
 all_images = []
+all_images_url = []
 with open(filepath, 'r', encoding="utf8") as fin:
     header_pattern_count = 0
     tags_count = 0
@@ -152,8 +153,14 @@ for idx, simg_file_obj in enumerate(all_images):
         values = {"purpose": "image","rel": simg_file_obj[1]}
         print(url)
         r = requests.post(url, files=_files, headers=headers, params=values)
-        print(r.content)
-        #sleep(2)
+        #print(r.content)
+        rj = r.json()
+        url_image = rj["images"][0]["url"]
+        print(url_image)
+        url_ref_path = os.path.relpath(url_image, base_url)
+        print(url_ref_path)
+        all_images_url.append(url_ref_path)
+        sleep(1)
 
 #post blog
 url = base_url + 'ghost/api/admin/posts/'
