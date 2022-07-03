@@ -8,7 +8,7 @@ import json
 
 import os
 import sys
-
+import re
 
 
 with open(".config.json", "r") as f:
@@ -52,16 +52,30 @@ else:
     headers = {'Authorization': 'Ghost {}'.format(token.decode("utf-8"))}
 
 
-#
+# .md file as an input argument
 if len(sys.argv) > 1:
     filepath = sys.argv[1]
 else:
     exit(-1)
 
 print(filepath)
-with open(filepath, 'rU' , encoding="utf8") as fin:
+print(os.path.basename(filepath))
+print(os.path.splitext(filepath)[0])
+
+image_asset_path = os.path.splitext(filepath)[0]
+image_pattern = re.compile(r'\{\%\s*asset_img\s*([0-9a-zA-Z_.]+)\s')
+
+with open(filepath, 'r', encoding="utf8") as fin:
     for line in fin:
-        print(line)
+        #print(line)
+        image_file = image_pattern.findall(line)
+        if len(image_file) > 0:
+            image_file_path = os.path.join(image_asset_path,image_file[0])
+            if os.path.exists(image_file_path):
+                print(image_file_path)
+            else:
+                printf("Cannot find image file: " + image_file_path)
+
 body = {
     "posts": [
         {
@@ -70,6 +84,6 @@ body = {
         }
     ]
 }
-r = requests.post(url, json=body, headers=headers)
+#r = requests.post(url, json=body, headers=headers)
 
-print(r.content)
+#print(r.content)
