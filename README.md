@@ -1,6 +1,10 @@
 # md2ghost
 
-convert Markdown of Hexo into ghost blog
+convert Hexo Markdown blog to Ghost blog
+
+https://hexo.io/
+
+https://ghost.org/
 
 create '.config' file in root folder
 ```
