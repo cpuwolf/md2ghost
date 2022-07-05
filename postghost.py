@@ -70,18 +70,19 @@ class Md2Ghost:
         self.ctags_line.clear()
         
         print(filepath)
-        print(os.path.basename(filepath))
+        print(os.path.dirname(filepath))
         print(os.path.splitext(filepath)[0])
 
         image_asset_path = os.path.splitext(filepath)[0]
         image_pattern = re.compile(r'\{\%\s*asset_img\s*([0-9a-zA-Z_.]+)')
+        adv_image_pattern = re.compile(r'^\!\[(.*?)\]\((.*?)\)')
         title_pattern = re.compile(r'^title:\s*(.*)')
         date_pattern = re.compile(r'^date:\s*(.*)')
         tags_header_pattern = re.compile(r'^tags:')
         tags_pattern = re.compile(r'^\s*-\s*(.*)')
         header_pattern = re.compile(r'^---')
         weblink_pattern = re.compile(r'((http|https)\:\/\/)?[a-zA-Z0-9\.\/\?\:@\-_=#]+\.([a-zA-Z]){2,6}([a-zA-Z0-9\.\&\/\?\:@\-_=#])*')
-        adv_weblink_pattern = re.compile(r'\[(.*?)\]\((.*?)\)')
+        adv_weblink_pattern = re.compile(r'^\[(.*?)\]\((.*?)\)')
         h1_pattern = re.compile(r'^#\s*(.*?)#')
         h2_pattern = re.compile(r'^##\s*(.*?)#')
         h3_pattern = re.compile(r'^###\s*(.*?)#')
@@ -127,6 +128,7 @@ class Md2Ghost:
                     #markdown content
                     #extract asset_img
                     image_file = image_pattern.findall(line)
+                    adv_image_file = adv_image_pattern.findall(line)
                     if len(image_file) > 0:
                         image_file_path = os.path.join(image_asset_path,image_file[0])
                         if os.path.exists(image_file_path):
@@ -147,6 +149,30 @@ class Md2Ghost:
                             self.html = self.html + img_str
                         else:
                             print("Cannot find image file: " + image_file_path)
+                            
+                    elif len(adv_image_file) > 0:
+                        image_file_path_tmp = os.path.join(os.path.dirname(filepath),".."+adv_image_file[0][1])
+                        print(image_file_path_tmp)
+                        image_file_path = os.path.abspath(image_file_path_tmp)
+                        if os.path.exists(image_file_path):
+                            print(image_file_path)
+                            
+                            dirname=os.path.dirname
+                            useless_base_path = dirname(dirname(image_file_path))
+                            print(useless_base_path)
+                            ref_path = os.path.relpath(image_file_path, useless_base_path)
+                            print(ref_path)
+                            img_obj = [ image_file_path, ref_path]
+                            self.all_images.append(img_obj)
+                            url_path = self.upload_image(img_obj)
+                            url_path = url_path.replace("\\", "/")
+                            img_str= "<figure class=\"kg-card kg-image-card\"><img src=\"__GHOST_URL__/content/images/" + url_path + "\" class=\"kg-image\" alt loading=\"lazy\"></figure>"
+                            print(img_str)
+                            self.all_images_url.append("__GHOST_URL__/content/images/" + url_path)
+                            self.html = self.html + img_str
+                        else:
+                            print("Cannot find adv image file: " + image_file_path)
+                            return
                     else:
                         #html convert
                         if len(line) > 1:
@@ -209,7 +235,7 @@ class Md2Ghost:
                 {
                     "title": self.title_line,
                     "html": self.html,
-                    "status": "published"
+                    #"status": "published"
                 }
             ]
         }
